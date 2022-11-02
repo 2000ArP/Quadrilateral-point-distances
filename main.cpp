@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <string>
 #include <algorithm>
 #include <cmath>
 
@@ -10,7 +11,18 @@ const double MAXLONGITUDE = 180;
 
 class Position {
     public:
-        double longitude, latitude, height;
+        Position(double latitude, double longitude, double height) {
+            this->latitude = latitude;
+            this->longitude = longitude;
+            this->height = height;
+        }
+
+        string toString() {
+            return "(" + to_string(this->latitude) + ", " + to_string(this->longitude) + ", " + to_string(this->height) + ')';
+        }
+        double getLat() {return latitude;};
+        double getLong() {return longitude;};
+        double getHeight() {return height;};
         bool operator==(const Position &rhs) const {
             return (this->longitude == rhs.longitude && this->latitude == rhs.latitude && this->height == rhs.height);
         }
@@ -23,12 +35,10 @@ class Position {
 
             return (point1.latitude > point2.latitude);
         }
-};
 
-ostream& operator<<(ostream& outStream, const Position& posToOutput) {
-    outStream << '(' << posToOutput.latitude << ", " << posToOutput.longitude << ", " << posToOutput.height << ')';
-    return outStream; 
-}
+    private:
+        double longitude, latitude, height;
+};
 
 class Calculator {
     public:
@@ -41,12 +51,20 @@ double Calculator::degreesToMeters(double degrees) {
     return degrees * M_PI / 180 * 6378137;
 }
 
+double Calculator::calculateDistance(Position p1, Position p2) {
+    double latDiff = degreesToMeters(p1.getLat()) - degreesToMeters(p2.getLat());
+    double longDiff = degreesToMeters(p1.getLong()) - degreesToMeters(p2.getLong());
+    double heightDiff = p1.getHeight() - p2.getHeight();
+
+    return sqrt(pow(latDiff, 2) + pow(longDiff, 2) + pow(heightDiff, 2));
+}
+
 class Quadrilateral {
     public:
         Quadrilateral(vector<Position> shape);
         void printSortedPositions();
         bool validateShape();
-
+        void showAllDistances();
     private:
         vector<Position> points;
 };
@@ -61,18 +79,18 @@ void Quadrilateral::printSortedPositions() {
 
     cout << "The positions of the points you have entered, ordered by descending latitude, ascending longitude, are:\n";
     for(Position point : sortedShape) {
-        cout << point << '\n';
+        cout << point.toString() << '\n';
     }
 }
 
 bool Quadrilateral::validateShape() {
     for(Position point : this->points) {
-        if(point.latitude > MAXLATITUDE || point.latitude < -MAXLATITUDE) {
+        if(point.getLat() > MAXLATITUDE || point.getLat() < -MAXLATITUDE) {
             cout << "Error: Latitude outside of accepted range [-90, 90]\n";
             return false;
         }
 
-        if(point.longitude >= MAXLONGITUDE || point.longitude < -MAXLONGITUDE) {
+        if(point.getLong() >= MAXLONGITUDE || point.getLong() < -MAXLONGITUDE) {
             cout << "Error: Longitude outside of accepted range [-180, 180)\n";
             return false;
         }
@@ -86,13 +104,21 @@ bool Quadrilateral::validateShape() {
     return true;
 }
 
+void Quadrilateral::showAllDistances() {
+    for(auto i = this->points.begin(); i != this->points.end(); i++) {
+        for(auto j = i + 1; j != this->points.end(); j++) {
+            cout << "Distance between point " << i->toString() << " and point " << j->toString() << " is " << Calculator::calculateDistance(*i, *j) << '\n';
+        }
+    }
+}
+
 Quadrilateral parseInput() {
     vector<Position> shape;
     for(int i = 1; i <= 4; i++) {
-        Position newPoint;
+        double latitude, longitude, height;
         cout << "Please enter point " << i << " latitude, longitude (in degrees) and height (in meters), separated by spaces:\n";
-        cin >> newPoint.latitude >> newPoint.longitude >> newPoint.height;
-        shape.push_back(newPoint);
+        cin >> latitude >> longitude >> height;
+        shape.push_back(Position(latitude, longitude, height));
     }
 
     return Quadrilateral(shape);
@@ -105,5 +131,7 @@ int main() {
     }
 
     shape.printSortedPositions();
+
+    shape.showAllDistances();
     return 0;
 }
