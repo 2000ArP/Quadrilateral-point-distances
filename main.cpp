@@ -1,10 +1,12 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
-#define MAXLATITUDE 90
-#define MAXLONGITUDE 180
+#include <cmath>
 
 using namespace std;
+
+const double MAXLATITUDE = 90;
+const double MAXLONGITUDE = 180;
 
 class Position {
     public:
@@ -34,6 +36,10 @@ class Calculator {
     private:
         static double degreesToMeters(double degrees);
 };
+
+double Calculator::degreesToMeters(double degrees) {
+    return degrees * M_PI / 180 * 6378137;
+}
 
 class Quadrilateral {
     public:
