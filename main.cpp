@@ -3,6 +3,8 @@
 #include <string>
 #include <algorithm>
 #include <cmath>
+#include <sstream>
+#include <iomanip>
 
 using namespace std;
 
@@ -17,8 +19,11 @@ class Position {
             this->height = height;
         }
 
+        // Used to print a Position with coordinates with 2 decimal precision
         string toString() {
-            return "(" + to_string(this->latitude) + ", " + to_string(this->longitude) + ", " + to_string(this->height) + ')';
+            stringstream formatStream;
+            formatStream << fixed << setprecision(2) << '(' << this->latitude << ", " << this->longitude << ", " << this->height << ')';
+            return formatStream.str();
         }
         double getLat() {return latitude;};
         double getLong() {return longitude;};
@@ -28,20 +33,23 @@ class Position {
         }
 
         // This function is used in sorting Positions in order of descending latitude, ascending longitude
-        static bool comparePoints(Position point1, Position point2) {
-            if(point1.latitude == point2.latitude) {
-                return (point1.longitude < point2.longitude);
-            }
-
-            return (point1.latitude > point2.latitude);
-        }
+        static bool comparePoints(Position point1, Position point2);
 
     private:
         double longitude, latitude, height;
 };
 
+bool Position::comparePoints(Position point1, Position point2) {
+    if(point1.latitude == point2.latitude) {
+        return (point1.longitude < point2.longitude);
+    }
+
+    return (point1.latitude > point2.latitude);
+}
+
 class Calculator {
     public:
+        // Calculates distance between 2 points in 3d space
         static double calculateDistance(Position p1, Position p2);
     private:
         static double degreesToMeters(double degrees);
@@ -52,6 +60,7 @@ double Calculator::degreesToMeters(double degrees) {
 }
 
 double Calculator::calculateDistance(Position p1, Position p2) {
+    // Latitude and longitude converted to relative meters before distance calculation
     double latDiff = degreesToMeters(p1.getLat()) - degreesToMeters(p2.getLat());
     double longDiff = degreesToMeters(p1.getLong()) - degreesToMeters(p2.getLong());
     double heightDiff = p1.getHeight() - p2.getHeight();
@@ -73,6 +82,7 @@ Quadrilateral::Quadrilateral(vector<Position> shape) {
     this->points = shape;
 }
 
+// Sorts points by ascending latitude and descending longitude, then prints them
 void Quadrilateral::printSortedPositions() {
     vector<Position> sortedShape = this->points;
     sort(sortedShape.begin(), sortedShape.end(), Position::comparePoints);
@@ -83,6 +93,7 @@ void Quadrilateral::printSortedPositions() {
     }
 }
 
+// Validates that the shape meets input requirements
 bool Quadrilateral::validateShape() {
     for(Position point : this->points) {
         if(point.getLat() > MAXLATITUDE || point.getLat() < -MAXLATITUDE) {
@@ -107,7 +118,7 @@ bool Quadrilateral::validateShape() {
 void Quadrilateral::showAllDistances() {
     for(auto i = this->points.begin(); i != this->points.end(); i++) {
         for(auto j = i + 1; j != this->points.end(); j++) {
-            cout << "Distance between point " << i->toString() << " and point " << j->toString() << " is " << Calculator::calculateDistance(*i, *j) << '\n';
+            cout << "Distance between point " << i->toString() << " and point " << j->toString() << " is " << Calculator::calculateDistance(*i, *j) << " meters." << '\n';
         }
     }
 }
